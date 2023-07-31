@@ -1,3 +1,5 @@
+require("constants")
+
 function calc_rotation(currentDir, rotations)
     local dir = currentDir - 1
     dir = (dir + rotations) % 4
