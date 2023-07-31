@@ -1,8 +1,8 @@
-DIRECTIONS = {"north", "east", "south", "west"}
-NORTH, EAST, SOUTH, WEST, UP, DOWN = 1, 2, 3, 4, 5, 6
-DELTA = {vector.new(0, 0, -1), vector.new(1, 0, 0), vector.new(0, 0, 1), vector.new(-1, 0, 0), vector.new(0, 1, 0), vector.new(0, -1, 0)}
+require("constants")
+require("helpers")
 
-ChungBot = class.Class()
+
+ChungBot = ChungUtils.Class()
 
 function ChungBot:__init(x, y, z, direction)
     os.loadAPI("chung_helpers")
@@ -16,6 +16,25 @@ function ChungBot:__init(x, y, z, direction)
     self.dir = self.startDir
 
     self.selectedSlot = 1
+
+    self.currentState = nil
+end
+
+
+function ChungBot:switch_state(state)
+    if self.currentState then
+        self.currentState:exit()
+    end
+
+    self.currentState = state
+    self.currentState:enter()
+end
+
+
+function ChungBot:update()
+    if self.currentState then
+        self.currentState:update()
+    end
 end
 
 
@@ -49,7 +68,7 @@ function ChungBot:rotate_right(count)
 
     for i=1, count do turtle.turnRight() end
 
-    self.dir = chung_helpers.calc_rotation(self.dir, count)
+    self.dir = calc_rotation(self.dir, count)
 end
 
 
@@ -58,7 +77,7 @@ function ChungBot:rotate_left(count)
 
     for i=1, count do turtle.turnLeft() end
 
-    self.dir = chung_helpers.calc_rotation(self.dir, -count)
+    self.dir = calc_rotation(self.dir, -count)
 end
 
 
@@ -70,9 +89,9 @@ end
 function ChungBot:face(direction)
     if self.dir == direction then
         return
-    elseif chung_helpers.calc_rotation(self.dir, 1) == direction then
+    elseif calc_rotation(self.dir, 1) == direction then
         self:rotate_right()
-    elseif chung_helpers.calc_rotation(self.dir, -1) == direction then
+    elseif calc_rotation(self.dir, -1) == direction then
         self:rotate_left()
     else
         self:rotate_right(2)
@@ -81,7 +100,7 @@ end
 
 
 function ChungBot:move_forward(count, dig)
-    chung_helpers.move(self.dir, turtle.forward, count, dig, turtle.dig)
+    move(self.dir, turtle.forward, count, dig, turtle.dig)
 end
 
 
@@ -107,12 +126,12 @@ end
 
 
 function ChungBot:move_up(count, dig)
-    chung_helpers.move(UP, turtle.up, count, dig, turtle.digUp)
+    move(UP, turtle.up, count, dig, turtle.digUp)
 end
 
 
 function ChungBot:move_down(count, dig)
-    chung_helpers.move(DOWN, turtle.down, count, dig, turtle.digDown)
+    move(DOWN, turtle.down, count, dig, turtle.digDown)
 end
 
 
@@ -250,17 +269,17 @@ end
 
 
 function ChungBot:place(slot)
-    return chung_helpers.place(slot, turtle.place)
+    return place(slot, turtle.place)
 end
 
 
 function ChungBot:place_down(slot)
-    return chung_helpers.place(slot, turtle.placeDown)
+    return place(slot, turtle.placeDown)
 end
 
 
 function ChungBot:place_up(slot)
-    return chung_helpers.place(slot, turtle.placeUp)
+    return place(slot, turtle.placeUp)
 end
 
 
@@ -327,7 +346,7 @@ function ChungBot:mine_vein(depth, visited)
     local localStartDir = self.dir
 
     for i=0, 3 do
-        local newDir = chung_helpers.calc_rotation(localStartDir, i)
+        local newDir = calc_rotation(localStartDir, i)
         local block = (self.pos + DELTA[newDir]):tostring()
 
         if visited[block] == nil then
@@ -339,7 +358,7 @@ function ChungBot:mine_vein(depth, visited)
             if notAir and blockData.name == "minecraft:diamond_ore" then
                 self:move_forward(1, true)
                 self:mine_vein(depth - 1, visited)
-                self:face(chung_helpers.calc_rotation(newDir, 2))
+                self:face(calc_rotation(newDir, 2))
                 self:move_forward(1, true)
             end
         end
